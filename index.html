@@ -1,0 +1,891 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spring Boot Dependency Analysis Hub</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0a0a0f;
+            --bg-secondary: #12121a;
+            --bg-tertiary: #1a1a24;
+            --bg-card: #16161f;
+            --border-color: #2a2a3a;
+            --text-primary: #ffffff;
+            --text-secondary: #a0a0b0;
+            --text-muted: #6a6a7a;
+            --accent-magenta: #F926E1;
+            --accent-blue: #4d65ff;
+            --severity-critical: #ff4757;
+            --severity-high: #ff6b81;
+            --severity-medium: #ffa502;
+            --severity-low: #7bed9f;
+            --success: #2ed573;
+            --warning: #ffa502;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            font-weight: 400;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 0 24px;
+        }
+
+        /* Header */
+        .site-header {
+            border-bottom: 1px solid var(--border-color);
+            padding: 20px 0;
+            margin-bottom: 48px;
+        }
+
+        .header-content {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, var(--accent-magenta), var(--accent-blue));
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .logo-icon svg {
+            width: 24px;
+            height: 24px;
+            fill: white;
+        }
+
+        .logo-text {
+            font-weight: 600;
+            font-size: 1.1rem;
+            letter-spacing: -0.02em;
+        }
+
+        /* Hero Section */
+        .hero {
+            text-align: center;
+            padding: 48px 0 64px;
+        }
+
+        .hero h1 {
+            font-size: 2.75rem;
+            font-weight: 700;
+            letter-spacing: -0.03em;
+            margin-bottom: 16px;
+            background: linear-gradient(135deg, var(--text-primary) 0%, var(--text-secondary) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero p {
+            font-size: 1.125rem;
+            color: var(--text-secondary);
+            max-width: 600px;
+            margin: 0 auto;
+            font-weight: 300;
+        }
+
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 16px;
+            margin-bottom: 48px;
+        }
+
+        @media (max-width: 1200px) {
+            .stats-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        .stat-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 24px;
+            transition: border-color 0.2s ease, transform 0.2s ease;
+        }
+
+        .stat-card:hover {
+            border-color: var(--accent-magenta);
+            transform: translateY(-2px);
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            margin-bottom: 4px;
+        }
+
+        .stat-label {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            font-weight: 400;
+        }
+
+        .stat-card.critical .stat-value { color: var(--severity-critical); }
+        .stat-card.high .stat-value { color: var(--severity-high); }
+        .stat-card.warning .stat-value { color: var(--warning); }
+        .stat-card.success .stat-value { color: var(--success); }
+
+        /* Filter Section */
+        .filter-section {
+            margin-bottom: 32px;
+        }
+
+        .filter-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px;
+            align-items: center;
+        }
+
+        .search-container {
+            flex: 1;
+            min-width: 280px;
+            position: relative;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 14px 16px 14px 48px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-size: 0.9375rem;
+            font-family: inherit;
+            transition: border-color 0.2s ease;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: var(--accent-blue);
+        }
+
+        .search-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+        }
+
+        .filter-tabs {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .filter-tab {
+            padding: 12px 20px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+            font-weight: 500;
+            font-family: inherit;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            position: relative;
+        }
+
+        .filter-tab:hover {
+            color: var(--text-primary);
+            border-color: var(--text-muted);
+        }
+
+        .filter-tab.active {
+            color: var(--text-primary);
+            border-color: var(--accent-magenta);
+            border-left: 4px solid var(--accent-magenta);
+            padding-left: 17px;
+        }
+
+        .filter-tab:focus-visible {
+            outline: 2px solid var(--accent-blue);
+            outline-offset: 2px;
+        }
+
+        /* Results Count */
+        .results-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+            padding: 0 4px;
+        }
+
+        .results-count {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+
+        .results-count strong {
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        /* Table */
+        .table-wrapper {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+        }
+
+        .table-scroll {
+            overflow-x: visible;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.8125rem;
+            table-layout: auto;
+        }
+
+        thead {
+            background: var(--bg-tertiary);
+        }
+
+        th {
+            padding: 10px 8px;
+            text-align: left;
+            font-weight: 600;
+            color: var(--text-secondary);
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+            cursor: pointer;
+            user-select: none;
+            transition: color 0.2s ease;
+            border-bottom: 1px solid var(--border-color);
+            line-height: 1.4;
+        }
+
+        th:hover {
+            color: var(--text-primary);
+        }
+
+        th.sorted {
+            color: var(--accent-magenta);
+        }
+
+        .sort-icon {
+            display: inline-block;
+            margin-left: 6px;
+            opacity: 0.5;
+            font-size: 0.7rem;
+        }
+
+        th.sorted .sort-icon {
+            opacity: 1;
+        }
+
+        /* Column alignment */
+        .col-days {
+            text-align: right;
+        }
+
+        .col-cve {
+            text-align: center;
+        }
+
+        /* Prevent data from wrapping */
+        td.nowrap {
+            white-space: nowrap;
+        }
+
+        td.text-center {
+            text-align: center;
+        }
+
+        td.text-right {
+            text-align: right;
+        }
+
+        td {
+            padding: 10px 8px;
+            border-bottom: 1px solid var(--border-color);
+            vertical-align: middle;
+        }
+
+        tbody tr {
+            transition: background 0.15s ease;
+        }
+
+        tbody tr:hover {
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        /* Row severity highlighting */
+        tr.severity-critical {
+            background: rgba(255, 71, 87, 0.08);
+            border-left: 3px solid var(--severity-critical);
+        }
+
+        tr.severity-critical:hover {
+            background: rgba(255, 71, 87, 0.12);
+        }
+
+        tr.severity-high {
+            background: rgba(255, 107, 129, 0.06);
+            border-left: 3px solid var(--severity-high);
+        }
+
+        tr.severity-high:hover {
+            background: rgba(255, 107, 129, 0.1);
+        }
+
+        tr.severity-medium {
+            background: rgba(255, 165, 2, 0.05);
+            border-left: 3px solid var(--severity-medium);
+        }
+
+        tr.severity-medium:hover {
+            background: rgba(255, 165, 2, 0.08);
+        }
+
+        /* Library name */
+        .library-name {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .library-group {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            margin-top: 2px;
+            font-family: 'SF Mono', Monaco, 'Courier New', monospace;
+        }
+
+        /* Version cells */
+        .version {
+            font-family: 'SF Mono', Monaco, 'Courier New', monospace;
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            white-space: nowrap;
+        }
+
+        .version-latest {
+            color: var(--success);
+        }
+
+        /* CVE Count styling */
+        .cve-count {
+            font-weight: 600;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .cve-count.cve-none {
+            color: var(--text-muted);
+            font-weight: 400;
+        }
+
+        .cve-critical-text {
+            color: var(--severity-critical);
+        }
+
+        .cve-high-text {
+            color: var(--severity-high);
+        }
+
+        .cve-total-text {
+            color: var(--warning);
+        }
+
+        /* Days indicator */
+        .days-indicator {
+            font-weight: 500;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .days-critical {
+            color: var(--severity-critical);
+        }
+
+        .days-high {
+            color: var(--severity-high);
+        }
+
+        .days-medium {
+            color: var(--severity-medium);
+        }
+
+        .days-ok {
+            color: var(--text-muted);
+        }
+
+        /* Empty & Loading states */
+        .empty-state {
+            text-align: center;
+            padding: 64px 24px;
+            color: var(--text-secondary);
+        }
+
+        .empty-state-icon {
+            font-size: 3rem;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+
+        .loading-state {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            padding: 64px 24px;
+            color: var(--text-secondary);
+        }
+
+        .loading-spinner {
+            width: 20px;
+            height: 20px;
+            border: 2px solid var(--border-color);
+            border-top-color: var(--accent-magenta);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Footer */
+        .site-footer {
+            margin-top: 64px;
+            padding: 32px 0;
+            border-top: 1px solid var(--border-color);
+            text-align: center;
+        }
+
+        .footer-text {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 2rem;
+            }
+
+            .hero p {
+                font-size: 1rem;
+            }
+
+            .filter-row {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .search-container {
+                min-width: 100%;
+            }
+
+            .filter-tabs {
+                justify-content: flex-start;
+                overflow-x: auto;
+                padding-bottom: 8px;
+            }
+
+            th, td {
+                padding: 8px 6px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="site-header">
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <div class="logo-icon">
+                        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+                        </svg>
+                    </div>
+                    <span class="logo-text">Spring Dependency Hub</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <div class="container">
+            <section class="hero">
+                <h1>Spring Boot Dependency Analysis</h1>
+                <p>Track managed dependency versions, identify security vulnerabilities, and monitor version staleness across your Spring Boot applications.</p>
+            </section>
+
+            <section class="stats-grid" id="stats-grid">
+                <!-- Populated by JavaScript -->
+            </section>
+
+            <section class="filter-section">
+                <div class="filter-row">
+                    <div class="search-container">
+                        <svg class="search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="11" cy="11" r="8"></circle>
+                            <path d="m21 21-4.35-4.35"></path>
+                        </svg>
+                        <input type="text" class="search-input" id="search" placeholder="Search libraries, groups, or versions...">
+                    </div>
+                    <div class="filter-tabs">
+                        <button class="filter-tab active" data-filter="all">All Dependencies</button>
+                        <button class="filter-tab" data-filter="update">Updates Available</button>
+                        <button class="filter-tab" data-filter="cve">Has CVEs</button>
+                        <button class="filter-tab" data-filter="critical">Critical CVEs</button>
+                        <button class="filter-tab" data-filter="stale">Very Stale</button>
+                    </div>
+                </div>
+            </section>
+
+            <div class="results-info">
+                <span class="results-count" id="results-count"></span>
+            </div>
+
+            <div class="table-wrapper">
+                <div class="table-scroll">
+                    <table id="dependency-table">
+                        <thead>
+                            <tr>
+                                <th data-sort="library">Library <span class="sort-icon">&#8597;</span></th>
+                                <th data-sort="version">Managed Version <span class="sort-icon">&#8597;</span></th>
+                                <th data-sort="publishDate">Publish Date <span class="sort-icon">&#8597;</span></th>
+                                <th data-sort="latestPatch">Latest Patch <span class="sort-icon">&#8597;</span></th>
+                                <th data-sort="latestPatchPublishDate">Publish Date <span class="sort-icon">&#8597;</span></th>
+                                <th data-sort="daysBetweenManagedAndLatestVersions" class="col-days">Managed Delay <span class="sort-icon">&#8597;</span></th>
+                                <th data-sort="daysSinceLatestPatch" class="col-days">Days Since Release <span class="sort-icon">&#8597;</span></th>
+                                <th data-sort="latestPatchTotalCveCount" class="col-cve">Total CVEs <span class="sort-icon">&#8597;</span></th>
+                                <th data-sort="latestPatchCriticalCveCount" class="col-cve">Critical CVEs <span class="sort-icon">&#8597;</span></th>
+                                <th data-sort="latestPatchHighCveCount" class="col-cve">High CVEs <span class="sort-icon">&#8597;</span></th>
+                            </tr>
+                        </thead>
+                        <tbody id="table-body">
+                            <tr>
+                                <td colspan="10">
+                                    <div class="loading-state">
+                                        <div class="loading-spinner"></div>
+                                        <span>Loading dependency data...</span>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="site-footer">
+        <div class="container">
+            <p class="footer-text">Data sourced from Maven Central and OSV.dev</p>
+        </div>
+    </footer>
+
+    <script>
+        let allData = [];
+        let filteredData = [];
+        let currentSort = { column: 'daysBetweenManagedAndLatestVersions', direction: 'desc' };
+        let currentFilter = 'all';
+        let searchTerm = '';
+
+        async function init() {
+            try {
+                const response = await fetch('dependency-analysis.json');
+                if (!response.ok) throw new Error('Failed to load data');
+                allData = await response.json();
+                filteredData = [...allData];
+
+                renderStats();
+                applyFiltersAndSort();
+                setupEventListeners();
+            } catch (error) {
+                document.getElementById('table-body').innerHTML = `
+                    <tr>
+                        <td colspan="10">
+                            <div class="empty-state">
+                                <div class="empty-state-icon">&#9888;</div>
+                                <p>Error loading data: ${error.message}</p>
+                            </div>
+                        </td>
+                    </tr>`;
+            }
+        }
+
+        function renderStats() {
+            const total = allData.length;
+            const withUpdates = allData.filter(d => (d.daysBetweenManagedAndLatestVersions || 0) > 0).length;
+            const withCves = allData.filter(d => (d.latestPatchTotalCveCount || 0) > 0).length;
+            const criticalCves = allData.reduce((sum, d) => sum + (d.latestPatchCriticalCveCount || 0), 0);
+            const highCves = allData.reduce((sum, d) => sum + (d.latestPatchHighCveCount || 0), 0);
+            const veryStale = allData.filter(d => (d.daysSinceLatestPatch || 0) > 180).length;
+
+            document.getElementById('stats-grid').innerHTML = `
+                <div class="stat-card">
+                    <div class="stat-value">${total}</div>
+                    <div class="stat-label">Total Dependencies</div>
+                </div>
+                <div class="stat-card warning">
+                    <div class="stat-value">${withUpdates}</div>
+                    <div class="stat-label">Updates Available</div>
+                </div>
+                <div class="stat-card high">
+                    <div class="stat-value">${withCves}</div>
+                    <div class="stat-label">With Known CVEs</div>
+                </div>
+                <div class="stat-card critical">
+                    <div class="stat-value">${criticalCves}</div>
+                    <div class="stat-label">Critical CVEs</div>
+                </div>
+                <div class="stat-card high">
+                    <div class="stat-value">${highCves}</div>
+                    <div class="stat-label">High Severity CVEs</div>
+                </div>
+                <div class="stat-card warning">
+                    <div class="stat-value">${veryStale}</div>
+                    <div class="stat-label">Very Stale (&gt;180 days)</div>
+                </div>
+            `;
+        }
+
+        function getRowSeverityClass(dep) {
+            const days = dep.daysBetweenManagedAndLatestVersions || 0;
+            const hasCriticalCve = (dep.latestPatchCriticalCveCount || 0) > 0;
+            const hasHighCve = (dep.latestPatchHighCveCount || 0) > 0;
+
+            if (hasCriticalCve || days > 365) return 'severity-critical';
+            if (hasHighCve || days > 180) return 'severity-high';
+            if (days > 90) return 'severity-medium';
+            return '';
+        }
+
+        function getDaysClass(days) {
+            if (days === null || days === undefined) return 'days-ok';
+            if (days > 365) return 'days-critical';
+            if (days > 180) return 'days-high';
+            if (days > 90) return 'days-medium';
+            return 'days-ok';
+        }
+
+        function formatCveCount(count, type) {
+            if (count === 0) {
+                return '<span class="cve-count cve-none">0</span>';
+            }
+
+            let className = 'cve-count';
+            if (type === 'critical') {
+                className += ' cve-critical-text';
+            } else if (type === 'high') {
+                className += ' cve-high-text';
+            } else {
+                className += ' cve-total-text';
+            }
+
+            return `<span class="${className}">${count}</span>`;
+        }
+
+        function formatDays(days) {
+            if (days === null || days === undefined) return '<span class="days-indicator days-ok">-</span>';
+            return `<span class="days-indicator ${getDaysClass(days)}">${days.toLocaleString()}</span>`;
+        }
+
+        function renderTable() {
+            const tbody = document.getElementById('table-body');
+
+            if (filteredData.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="10">
+                            <div class="empty-state">
+                                <div class="empty-state-icon">&#128269;</div>
+                                <p>No matching dependencies found</p>
+                            </div>
+                        </td>
+                    </tr>`;
+                document.getElementById('results-count').innerHTML = '<strong>0</strong> results';
+                return;
+            }
+
+            document.getElementById('results-count').innerHTML = `Showing <strong>${filteredData.length}</strong> of <strong>${allData.length}</strong> dependencies`;
+
+            tbody.innerHTML = filteredData.map(dep => {
+                const severityClass = getRowSeverityClass(dep);
+                const groups = Array.isArray(dep.groups) ? dep.groups.join(', ') : (dep.groupId || '');
+
+                return `
+                    <tr class="${severityClass}">
+                        <td>
+                            <div class="library-name">${dep.library}</div>
+                            <div class="library-group">${groups}</div>
+                        </td>
+                        <td><span class="version">${dep.version}</span></td>
+                        <td class="nowrap"><span class="version">${dep.publishDate || '-'}</span></td>
+                        <td><span class="version ${dep.latestPatch !== dep.version ? 'version-latest' : ''}">${dep.latestPatch || dep.version}</span></td>
+                        <td class="nowrap"><span class="version">${dep.latestPatchPublishDate || '-'}</span></td>
+                        <td class="text-right">${formatDays(dep.daysBetweenManagedAndLatestVersions)}</td>
+                        <td class="text-right">${formatDays(dep.daysSinceLatestPatch)}</td>
+                        <td class="text-center">${formatCveCount(dep.latestPatchTotalCveCount || 0, 'total')}</td>
+                        <td class="text-center">${formatCveCount(dep.latestPatchCriticalCveCount || 0, 'critical')}</td>
+                        <td class="text-center">${formatCveCount(dep.latestPatchHighCveCount || 0, 'high')}</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function sortData() {
+            const { column, direction } = currentSort;
+
+            filteredData.sort((a, b) => {
+                let aVal = a[column];
+                let bVal = b[column];
+
+                if (Array.isArray(aVal)) aVal = aVal.join(', ');
+                if (Array.isArray(bVal)) bVal = bVal.join(', ');
+
+                if (aVal === null || aVal === undefined) aVal = direction === 'asc' ? Infinity : -Infinity;
+                if (bVal === null || bVal === undefined) bVal = direction === 'asc' ? Infinity : -Infinity;
+
+                if (typeof aVal === 'number' && typeof bVal === 'number') {
+                    return direction === 'asc' ? aVal - bVal : bVal - aVal;
+                }
+
+                aVal = String(aVal).toLowerCase();
+                bVal = String(bVal).toLowerCase();
+
+                return direction === 'asc' ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal);
+            });
+        }
+
+        function filterData() {
+            filteredData = allData.filter(dep => {
+                if (searchTerm) {
+                    const searchLower = searchTerm.toLowerCase();
+                    const groups = Array.isArray(dep.groups) ? dep.groups.join(' ') : '';
+                    const searchable = `${dep.library} ${groups} ${dep.version} ${dep.latestPatch}`.toLowerCase();
+                    if (!searchable.includes(searchLower)) {
+                        return false;
+                    }
+                }
+
+                switch (currentFilter) {
+                    case 'update':
+                        return (dep.daysBetweenManagedAndLatestVersions || 0) > 0;
+                    case 'cve':
+                        return (dep.latestPatchTotalCveCount || 0) > 0;
+                    case 'critical':
+                        return (dep.latestPatchCriticalCveCount || 0) > 0;
+                    case 'stale':
+                        return (dep.daysSinceLatestPatch || 0) > 180;
+                    default:
+                        return true;
+                }
+            });
+        }
+
+        function applyFiltersAndSort() {
+            filterData();
+            sortData();
+            renderTable();
+            updateSortIndicators();
+        }
+
+        function updateSortIndicators() {
+            document.querySelectorAll('th').forEach(th => {
+                th.classList.remove('sorted');
+                const icon = th.querySelector('.sort-icon');
+                if (icon) icon.textContent = '\u2195';
+            });
+
+            const currentTh = document.querySelector(`th[data-sort="${currentSort.column}"]`);
+            if (currentTh) {
+                currentTh.classList.add('sorted');
+                const icon = currentTh.querySelector('.sort-icon');
+                if (icon) {
+                    icon.textContent = currentSort.direction === 'asc' ? '\u2191' : '\u2193';
+                }
+            }
+        }
+
+        function setupEventListeners() {
+            document.getElementById('search').addEventListener('input', (e) => {
+                searchTerm = e.target.value;
+                applyFiltersAndSort();
+            });
+
+            document.querySelectorAll('.filter-tab').forEach(tab => {
+                tab.addEventListener('click', () => {
+                    document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+                    tab.classList.add('active');
+                    currentFilter = tab.dataset.filter;
+                    applyFiltersAndSort();
+                });
+            });
+
+            document.querySelectorAll('th[data-sort]').forEach(th => {
+                th.addEventListener('click', () => {
+                    const column = th.dataset.sort;
+                    if (currentSort.column === column) {
+                        currentSort.direction = currentSort.direction === 'asc' ? 'desc' : 'asc';
+                    } else {
+                        currentSort.column = column;
+                        const numericColumns = ['daysBetweenManagedAndLatestVersions', 'daysSinceLatestPatch',
+                                               'latestPatchTotalCveCount', 'latestPatchCriticalCveCount', 'latestPatchHighCveCount'];
+                        currentSort.direction = numericColumns.includes(column) ? 'desc' : 'asc';
+                    }
+                    applyFiltersAndSort();
+                });
+            });
+        }
+
+        init();
+    </script>
+</body>
+</html>
