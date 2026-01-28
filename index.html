@@ -43,7 +43,7 @@
         }
 
         .container {
-            max-width: 1600px;
+            max-width: fit-content;
             margin: 0 auto;
             padding: 0 24px;
         }
@@ -112,6 +112,71 @@
             max-width: 600px;
             margin: 0 auto;
             font-weight: 300;
+        }
+
+        /* Intro Content */
+        .intro-content {
+            width: 100%;
+            margin: 0 0 48px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+        }
+
+        .intro-content summary {
+            padding: 16px 20px;
+            font-weight: 600;
+            font-size: 1rem;
+            color: var(--text-primary);
+            cursor: pointer;
+            list-style: none;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .intro-content summary::-webkit-details-marker {
+            display: none;
+        }
+
+        .intro-content summary::before {
+            content: '\25B6';
+            font-size: 0.7rem;
+            transition: transform 0.2s ease;
+        }
+
+        .intro-content[open] summary::before {
+            transform: rotate(90deg);
+        }
+
+        .intro-content summary:hover {
+            color: var(--accent-magenta);
+        }
+
+        .intro-content-body {
+            padding: 0 20px 20px;
+            color: var(--text-secondary);
+            font-size: 0.9375rem;
+            line-height: 1.8;
+        }
+
+        .intro-content-body p {
+            margin-bottom: 1.25em;
+        }
+
+        .intro-content-body p:last-child {
+            margin-bottom: 0;
+        }
+
+        .intro-content-body a {
+            color: var(--accent-magenta);
+            text-decoration: none;
+            transition: color 0.2s ease;
+        }
+
+        .intro-content-body a:hover {
+            color: var(--accent-blue);
+            text-decoration: underline;
         }
 
         /* Stats Grid */
@@ -273,6 +338,7 @@
             background: var(--bg-card);
             border: 1px solid var(--border-color);
             border-radius: 12px;
+            width: fit-content;
         }
 
         .table-scroll {
@@ -280,7 +346,7 @@
         }
 
         table {
-            width: 100%;
+            width: auto;
             border-collapse: collapse;
             font-size: 0.8125rem;
             table-layout: auto;
@@ -302,7 +368,12 @@
             user-select: none;
             transition: color 0.2s ease;
             border-bottom: 1px solid var(--border-color);
+            border-right: 1px solid var(--border-color);
             line-height: 1.4;
+        }
+
+        th:last-child {
+            border-right: none;
         }
 
         th:hover {
@@ -349,7 +420,17 @@
         td {
             padding: 10px 8px;
             border-bottom: 1px solid var(--border-color);
+            border-right: 1px solid var(--border-color);
             vertical-align: middle;
+            text-align: center;
+        }
+
+        td:first-child {
+            text-align: left;
+        }
+
+        td:last-child {
+            border-right: none;
         }
 
         tbody tr {
@@ -410,7 +491,12 @@
             font-family: 'SF Mono', Monaco, 'Courier New', monospace;
             font-size: 0.75rem;
             color: var(--text-secondary);
-            white-space: nowrap;
+        }
+
+        .col-version {
+            max-width: 100px;
+            word-break: break-word;
+            text-align: center;
         }
 
         .version-latest {
@@ -560,9 +646,28 @@
     <main>
         <div class="container">
             <section class="hero">
-                <h1>Spring Boot Dependency Analysis</h1>
-                <p>Track managed dependency versions, identify security vulnerabilities, and monitor version staleness across your Spring Boot applications.</p>
+                <h1>Spring Boot 2.7 Managed Dependency Analysis</h1>
+                <p>This table shows how the Managed Dependency Coordinates from Spring Boot 2.7.18 (the last OSS release) have aged over time, including available patches, version staleness, and known CVEs.</p>
             </section>
+
+            <details class="intro-content">
+                <summary>About this chart</summary>
+                <div class="intro-content-body">
+                    <p>Spring Boot is a great platform for bringing in many different technologies and ensuring they work together seamlessly. To do this, Spring Boot carefully controls the artifacts and the versions of third party dependencies included. In the documentation, this is the <a href="https://docs.spring.io/spring-boot/docs/2.7.18/reference/html/dependency-versions.html#appendix.dependency-versions">Managed Dependency Coordinates</a>.</p>
+
+                    <p>Spring Boot 2.7.18 was the last OSS release in the Spring Boot 2.7 line. This was released on November 23, 2023. As of this date, the list of managed dependencies was frozen in time. But the underlying projects may be on a different timeline that outlives OSS Spring Boot 2.7.</p>
+
+                    <p>A powerful feature of Spring Boot is that you can easily override these dependencies on your own using Maven or Gradle build files. It's recommended that you follow the same principle as the Spring OSS team if you do this, and only upgrade patch versions to avoid breaking changes in your application.</p>
+
+                    <p>This table shows how those Managed Dependency Coordinates have aged over time. You can see if a patch release is available. The table also shows how many days you can "gain" by simply overriding the version to the latest patch (this is called 'Patch Lag'). You can also see how stale the latest patch of a given dependency is (this is called 'Patch Age').</p>
+
+                    <p>CVEs can and will be the obvious focus. We all want to build secure applications with no CVEs. But just because a CVE doesn't exist, doesn't mean an artifact isn't at risk. If an artifact has a very high Patch Age it could be ripe for a CVE that the maintainers won't touch. Or even worse, that version may stop being evaluated for CVE impact all together.</p>
+
+                    <p>If you are using Boot 2.7, you can, and should, watch this Managed Dependency Coordinate list very closely. You should keep an eye out for any new releases or CVEs and make sure you're always updating your dependencies. Or...</p>
+
+                    <p>You can use a trusted vendor like HeroDevs. In addition to patching CVEs, we update our <a href="https://docs.herodevs.com/spring/spring-boot-2-x-portfolio/spring-boot-2-7/managed-versions">Managed Dependency Coordinates</a>. This ensures that your "Patch Lag" is zero. This practice is not only the right thing to do, but it also remediates CVEs. There are a lot of CVE fixes in the "Patch Lag" of the products below - CVEs we didn't remediate ourselves but through good software engineering principles you are no longer exposed to.</p>
+                </div>
+            </details>
 
             <section class="stats-grid" id="stats-grid">
                 <!-- Populated by JavaScript -->
@@ -596,16 +701,20 @@
                     <table id="dependency-table">
                         <thead>
                             <tr>
-                                <th data-sort="library">Library <span class="sort-icon">&#8597;</span></th>
-                                <th data-sort="version">Managed Version <span class="sort-icon">&#8597;</span></th>
-                                <th data-sort="publishDate">Publish Date <span class="sort-icon">&#8597;</span></th>
-                                <th data-sort="latestPatch">Latest Patch <span class="sort-icon">&#8597;</span></th>
-                                <th data-sort="latestPatchPublishDate">Publish Date <span class="sort-icon">&#8597;</span></th>
-                                <th data-sort="daysBetweenManagedAndLatestVersions" class="col-days">Managed Delay <span class="sort-icon">&#8597;</span></th>
-                                <th data-sort="daysSinceLatestPatch" class="col-days">Days Since Release <span class="sort-icon">&#8597;</span></th>
-                                <th data-sort="latestPatchTotalCveCount" class="col-cve">Total CVEs <span class="sort-icon">&#8597;</span></th>
-                                <th data-sort="latestPatchCriticalCveCount" class="col-cve">Critical CVEs <span class="sort-icon">&#8597;</span></th>
-                                <th data-sort="latestPatchHighCveCount" class="col-cve">High CVEs <span class="sort-icon">&#8597;</span></th>
+                                <th rowspan="2" data-sort="library">Library <span class="sort-icon">&#8597;</span></th>
+                                <th colspan="2" style="text-align: center; cursor: default;">Boot 2.7 Managed Version</th>
+                                <th colspan="2" style="text-align: center; cursor: default;">Latest Patch Available</th>
+                                <th rowspan="2" data-sort="daysBetweenManagedAndLatestVersions" class="col-days">Patch Lag <span class="sort-icon">&#8597;</span></th>
+                                <th rowspan="2" data-sort="daysSinceLatestPatch" class="col-days">Patch Age <span class="sort-icon">&#8597;</span></th>
+                                <th rowspan="2" data-sort="latestPatchTotalCveCount" class="col-cve">Total CVEs <span class="sort-icon">&#8597;</span></th>
+                                <th rowspan="2" data-sort="latestPatchCriticalCveCount" class="col-cve">Critical CVEs <span class="sort-icon">&#8597;</span></th>
+                                <th rowspan="2" data-sort="latestPatchHighCveCount" class="col-cve">High CVEs <span class="sort-icon">&#8597;</span></th>
+                            </tr>
+                            <tr>
+                                <th data-sort="version" class="col-version">Version <span class="sort-icon">&#8597;</span></th>
+                                <th data-sort="publishDate">Published <span class="sort-icon">&#8597;</span></th>
+                                <th data-sort="latestPatch" class="col-version">Patch Version <span class="sort-icon">&#8597;</span></th>
+                                <th data-sort="latestPatchPublishDate">Published <span class="sort-icon">&#8597;</span></th>
                             </tr>
                         </thead>
                         <tbody id="table-body">
@@ -633,7 +742,7 @@
     <script>
         let allData = [];
         let filteredData = [];
-        let currentSort = { column: 'daysBetweenManagedAndLatestVersions', direction: 'desc' };
+        let currentSort = { column: 'latestPatchTotalCveCount', direction: 'desc' };
         let currentFilter = 'all';
         let searchTerm = '';
 
@@ -697,13 +806,11 @@
         }
 
         function getRowSeverityClass(dep) {
-            const days = dep.daysBetweenManagedAndLatestVersions || 0;
-            const hasCriticalCve = (dep.latestPatchCriticalCveCount || 0) > 0;
-            const hasHighCve = (dep.latestPatchHighCveCount || 0) > 0;
+            const totalCves = dep.latestPatchTotalCveCount || 0;
+            const patchAge = dep.daysSinceLatestPatch || 0;
 
-            if (hasCriticalCve || days > 365) return 'severity-critical';
-            if (hasHighCve || days > 180) return 'severity-high';
-            if (days > 90) return 'severity-medium';
+            if (totalCves > 0) return 'severity-critical';
+            if (patchAge > 180) return 'severity-medium';
             return '';
         }
 
@@ -770,8 +877,8 @@
                         <td class="nowrap"><span class="version">${dep.publishDate || '-'}</span></td>
                         <td><span class="version ${dep.latestPatch !== dep.version ? 'version-latest' : ''}">${dep.latestPatch || dep.version}</span></td>
                         <td class="nowrap"><span class="version">${dep.latestPatchPublishDate || '-'}</span></td>
-                        <td class="text-right">${formatDays(dep.daysBetweenManagedAndLatestVersions)}</td>
-                        <td class="text-right">${formatDays(dep.daysSinceLatestPatch)}</td>
+                        <td class="text-center">${formatDays(dep.daysBetweenManagedAndLatestVersions)}</td>
+                        <td class="text-center">${formatDays(dep.daysSinceLatestPatch)}</td>
                         <td class="text-center">${formatCveCount(dep.latestPatchTotalCveCount || 0, 'total')}</td>
                         <td class="text-center">${formatCveCount(dep.latestPatchCriticalCveCount || 0, 'critical')}</td>
                         <td class="text-center">${formatCveCount(dep.latestPatchHighCveCount || 0, 'high')}</td>
